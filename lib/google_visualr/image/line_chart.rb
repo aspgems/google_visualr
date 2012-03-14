@@ -39,6 +39,10 @@ module GoogleVisualr
         
         query_params[:chxl] = labels unless labels.blank?
 
+        if @options["lineStyles"]
+          query_params[:chls] = @options["lineStyles"].join('|')
+        end
+        
         chart_image_url(query_params.merge(params))
       end
     end

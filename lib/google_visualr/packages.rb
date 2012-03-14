@@ -46,8 +46,17 @@ module GoogleVisualr
         # Generic image chart defaults
         query_params = IMAGE_DEFAULTS.clone
 
-        # backgroundColor
-        query_params[:chf] = "bg,s," + options["backgroundColor"].gsub(/#/, '') if options["backgroundColor"]
+        # backgroundColor and chartFillColor
+        background_color = "bg,s," + options["backgroundColor"].gsub(/#/, '') if options["backgroundColor"]
+        chart_fill_color = "c,s," + options["chartFillColor"].gsub(/#/, '') if options["chartFillColor"]
+        
+        query_params[:chf] = [background_color, chart_fill_color].compact.join('|') if background_color || chart_fill_color
+        
+        # chart margins
+        if options["chartMargin"]
+          margin = stringify_keys!(options["chartMargin"])
+          query_params[:chma] = [margin["left"], margin["right"], margin["top"], margin["bottom"]].join(',')
+        end
         
         # color, colors ('color' param is ignored if 'colors' is present)
         if options["colors"]
@@ -83,9 +92,11 @@ module GoogleVisualr
         unless options["legend"] == 'none'
           query_params[:chdlp] = options["legend"].first unless options["legend"].blank?
           query_params[:chdl] = data_table.cols[1..-1].map{|col| col[:label] }.join('|')
+          query_params[:chdls] = options["legendStyle"] if options["legendStyle"]
         else
           query_params.delete(:chdlp)
           query_params.delete(:chdl)
+          query_params.delete(:chdls)
         end
         
         # min, max, valueLabelsInterval (works as long as :chxt => "x,y" and both 'min' and 'max' are set)
@@ -96,6 +107,9 @@ module GoogleVisualr
         end
         #####
 
+        # axis labels styles and formatting
+        query_params[:chxs] = options["axisLabelStyles"].join('|') if options["axisLabelStyles"]
+        
         query_params = stringify_keys!(query_params.merge(superseding_params))
         base_url = "https://chart.googleapis.com/chart"
         query = ""
